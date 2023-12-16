@@ -1,1 +1,1 @@
-from .SocketWrapper import Packet, PacketHeader, Client, Server, OutputVar
+from ..supersocket import Packet, PacketHeader, Client, Server, OutputVar
