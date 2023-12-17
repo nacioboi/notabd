@@ -1,1 +1,4 @@
 /**/__pycache__
+/.env
+/compilation_result.json
+/venv

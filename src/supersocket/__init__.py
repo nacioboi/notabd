@@ -5,7 +5,7 @@ import time, datetime
 from typing import Any
 
 from outvar import OutputVar
-
+import infoinject
 
 
 
@@ -17,13 +17,14 @@ TODO: add support for dns names instead of just ip addresses.
 
 TODO: implement the following feature.
 
-- Saves on bandwidth by only sending the header when it changes. This module does not however save on bandwidth on the message
-	itself. This is because the message should be quick to access and modify, and since the message is usually larger than the
-	header, it would take too much time to compress it.\n
+- Saves on bandwidth by only sending the header when it changes. This module does not however save on bandwidth on the
+	message itself.
+	This is because the message should be quick to access and modify, and since the message is usually larger than 
+	the header, it would take too much time to compress it.\n
 
 TODO: add support for a range of ports instead of just one port.
 
-This means having a connection id. the same id must be on the client and the server. 
+This means having a connection id. the same id must be on the client and the server.
 During the handshake, they will both agree on the id and if the id does not match, the connection will be refused.
 
 TODO: add reconnecting feature.
@@ -35,7 +36,8 @@ TODO: make it easy to incorporate state persistance for reconnecting.
 Say the client is playing a game and the connection is lost.
 Once reconnected, the client will need to know what state the game was in before the connection was lost.
 
-Not having this feature in a game is really easy to mess up so we need to make an api that encapsulates and encourages this feature.
+Not having this feature in a game is really easy to mess up so we need to make an api that encapsulates and encourages
+this feature.
 
 TODO: add detailed logging system.
 
@@ -45,8 +47,10 @@ TODO: add support for a server pool. kind of like a load balancer.
 
 A server pool will have a central server that will redirect clients to other servers in the pool.
 This will allow for a lot of clients to connect to the server pool without overloading one specific server.
+
 - The goal is to make it seem like a single server is handling all the clients.
-- We will abstract away the server pool so that, when using the api, it will seem like a single server is handling all the clients.
+- We will abstract away the server pool so that, when using the api, it will seem like a single server is handling all
+	the clients.
 
 TODO: after all this bs, rewrite the entire thing in rust and make a python wrapper for it.
 
@@ -136,8 +140,8 @@ class ANetworkManipulator:
 		self._send_callback = callback
 
 	def __init__(self,
-			bindable_address:"str", bindable_port:"int",
-			encoding: "str"="utf-8", buffer_size:"int"=512, suffix: "str|None"=None, split_char:"str|None"=None
+			bindable_address:"str", bindable_port:"int", encoding: "str"="utf-8", 
+			buffer_size:"int"=512, suffix: "str|None"=None, split_char:"str|None"=None
 	) -> None:
 		if suffix is None:
 			suffix = '\x00'
@@ -161,9 +165,15 @@ class ANetworkManipulator:
 		self._is_connected = False
 
 		if self._handle_handshake is None: # type:ignore
-			raise Exception(f"Any child class of `ANetworkManipulator` must implement the `_handle_handshake` method")
+			err_msg = ""
+			err_msg += "Any child class of `ANetworkManipulator` must implement the `_handle_handshake` "
+			err_msg += "method"
+			raise Exception(err_msg)
 		if self._handle_post_handshake is None: # type:ignore
-			raise Exception(f"Any child class of `ANetworkManipulator` must implement the `_handle_post_handshake` method")
+			err_msg = ""
+			err_msg += "Any child class of `ANetworkManipulator` must implement the "
+			err_msg += "`_handle_post_handshake` method"
+			raise Exception(err_msg)
 
 	def SET_DEBUGGING(self) -> None:
 		self.DEBUGGING = True
@@ -179,8 +189,10 @@ class ANetworkManipulator:
 		msg += end
 		print(msg, end="")
 
+	@infoinject.inject_debug_info_using_AI("we need to know *args and **kwargs")
 	def specify_socket_args(self, *args, **kwargs) -> None:
-		if self.DEBUGGING: self.log(f"`ANetworkManipulator.specify_socket_args` called with args={args} and kwargs={kwargs}.")
+		if self.DEBUGGING:
+			self.log(f"`ANetworkManipulator.specify_socket_args` called with args={args} and kwargs={kwargs}.")
 		self._sock = socket.socket(*args, **kwargs)
 		if self.DEBUGGING: self.log(f"`ANetworkManipulator.specify_socket_args` done.")
 

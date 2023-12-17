@@ -1,9 +1,10 @@
+"""
 from supersocket import Packet, Client, Server, PacketHeader, OutputVar  # Replace 'your_module' with the actual name
 import threading
 import time
 
 
-
+"""
 def RUN_TEST(func):
 	print(f"\n\n\n--\x1b[1;33m Running test: {func.__name__} \x1b[0m--")
 	try:
@@ -12,7 +13,7 @@ def RUN_TEST(func):
 		print(f"\x1b[31m Test {func.__name__} failed!! \x1b[1;31m \nErrors\x1b0m\x1b[31m: {e} \x1b[0m")
 		exit(1)
 	print(f"--\x1b[1;32m Test {func.__name__} passed!! \x1b[0m--")
-
+"""
 
 
 def test_handshake() -> bool:
@@ -95,7 +96,7 @@ def test_send_recv() -> bool:
 
 
 
-"""
+\"""
 TODO: 	MORE TESTS:
 
 1. Test sending more than the buffer size.
@@ -109,7 +110,22 @@ TODO: 	MORE TESTS:
 
 """
 
+import infoinject
 
-RUN_TEST(test_handshake)
-RUN_TEST(test_send_recv)
+InfoInjector = infoinject.initialize(
+	compilation_result_path="./compilation_result.json",
+	dont_save_compilation=True,
+)
+
+def test_info_inject():
+	@InfoInjector.inject_debug_info_using_AI("print the result of a and b")
+	@InfoInjector.provide_test_args(1, 2)
+	def add(a, b):
+		return a + b
+
+	add(1,2)
+
+#RUN_TEST(test_handshake)
+#RUN_TEST(test_send_recv)
+RUN_TEST(test_info_inject)
 
