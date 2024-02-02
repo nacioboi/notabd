@@ -1,9 +1,10 @@
 """
-from supersocket import Packet, Client, Server, PacketHeader, OutputVar  # Replace 'your_module' with the actual name
-import threading
+# NOTE: DONT REMOVE THESE BLOCK COMMENTS.
+from supersocket import Packet, Client, Server, PacketHeader, OutputVar
 import time
 
-
+# NOTE: THEY ARE BECAUSE WE'RE TESTING THE INFOINJECT MODULE, AND WE NEED TO MAKE SURE THE INFOINJECT MODULE IS WORKING PROPERLY.
+# NOTE: AFTER WE TEST THE INFOINJECT MODULE, WE CAN RESUME USING THESE COMMENTED OUT CODE.
 """
 def RUN_TEST(func):
 	print(f"\n\n\n--\x1b[1;33m Running test: {func.__name__} \x1b[0m--")
@@ -14,8 +15,16 @@ def RUN_TEST(func):
 		exit(1)
 	print(f"--\x1b[1;32m Test {func.__name__} passed!! \x1b[0m--")
 """
+# NOTE: DONT REMOVE THESE BLOCK COMMENTS.
 
 
+
+# instead of creating server and clients on separate threads...
+# we should use pythons built-in unittest module (it's actually pretty good for testing).
+# the problem i've come across when trying to use it though is having the server and client communicate is impossible.
+# i think the best way to do this is to have the server and client communicate through a file.
+# if we run the server isolated, then save the appropriate state to a file, then pass this file to the client
+#   (again, isolated), it should solve the problem.
 def test_handshake() -> bool:
 	try:
 		server = Server("127.0.0.1", 3000)
@@ -108,18 +117,28 @@ TODO: 	MORE TESTS:
 8. Test changing the callbacks.
 7. Test a different type of socket.
 
+# NOTE: THEY ARE BECAUSE WE'RE TESTING THE INFOINJECT MODULE, AND WE NEED TO MAKE SURE THE INFOINJECT MODULE IS WORKING PROPERLY.
+# NOTE: AFTER WE TEST THE INFOINJECT MODULE, WE CAN RESUME USING THESE COMMENTED OUT CODE.
 """
 
-import infoinject
+import os
 
-InfoInjector = infoinject.initialize(
-	compilation_result_path="./compilation_result.json",
-	dont_save_compilation=True,
-)
+# Firstly, disable the infoinject openai integration.
+# It's a bit of a hack, but it works, I just wanted the errors to go away.
+with open(".DISABLE_OPENAI", "w") as f: pass
+from infoinject import InfoInjector
+os.remove(".DISABLE_OPENAI")
 
 def test_info_inject():
-	@InfoInjector.inject_debug_info_using_AI("print the result of a and b")
-	@InfoInjector.provide_test_args(1, 2)
+	@InfoInjector.inject_debug_info([
+		{
+		"line": 1,
+		"prefix": "\t",
+		"x": [
+			"print(f'a = {a}')",
+		]
+		}
+	])
 	def add(a, b):
 		return a + b
 

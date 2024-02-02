@@ -3,24 +3,25 @@ info inject is a module allowing you to compile python source code with added de
 this means that the interesting parts of the code stay separate from printing and other debug code.
 """
 
-from typing import Callable
+from typing import Any, Callable
 from enum import Enum
 import json, os
 
-from ._ai import ensure_ai_is_initialized
-from ._ai import get_ai_response
+if not os.path.exists(".DISABLE_OPENAI"):
+	from ._ai import ensure_ai_is_initialized
+	from ._ai import get_ai_response
 
 
 
 class DebugMode(Enum):
 	Release = 0
 	Debug = 1
+	Disabled = 2
 
 
-class InfoInjector:
+
+class _InfoInjector:
 	def __init__(self, **kwargs):
-		self.compilation_result_path = kwargs["compilation_result_path"]
-		self.dont_save_compilation = kwargs["dont_save_compilation"]
 		self.debug_mode = DebugMode.Release
 		self.test_args_for_active_functions = {}
 
@@ -77,7 +78,6 @@ class InfoInjector:
 		# then `wrapper_one` will be called when the opening parenthesis is reached.
 		def wrapper_one(original_func):
 			def wrapper_two(*args, **kwargs):
-				print("one")
 				ai_response = None
 				ensure_ai_is_initialized()
 				ai_response = get_ai_response(self, original_func, ai_prompt, self.test_args_for_active_functions[original_func.__name__])
@@ -91,15 +91,26 @@ class InfoInjector:
 			return wrapper_two
 		return wrapper_one
 	
+	def _is_valid_instruction(self, instruction):
+		for key in ["line", "prefix", "x"]:
+			if not key in instruction:
+				return False
+		return True
+
+	def inject_debug_info(self, instructions:"list[dict]") -> "Callable":
+		def wrapper_one(original_func):
+			def wrapper_two(*args, **kwargs):
+				is_valid = all([v for v in instructions if self._is_valid_instruction(v)])
+				print(f"is_valid: {is_valid}")
+				
+			return wrapper_two
+		return wrapper_one
+
+
 	def provide_test_args(self, *args, **kwargs):
 		def wrapper_one(original_func):
 			self.test_args_for_active_functions[original_func.__name__] = (args, kwargs)
 			return original_func
 		return wrapper_one
 
-
-
-def initialize(**kwargs):
-	if not "compilation_result_path" in kwargs:
-		raise Exception("compilation_result_path not specified")
-	return InfoInjector(**kwargs)
+InfoInjector = _InfoInjector()
