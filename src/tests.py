@@ -129,22 +129,55 @@ with open(".DISABLE_OPENAI", "w") as f: pass
 from infoinject import InfoInjector
 os.remove(".DISABLE_OPENAI")
 
-def test_info_inject():
+def test_info_inject_1():
 	@InfoInjector.inject_debug_info([
 		{
-		"line": 1,
-		"prefix": "\t",
-		"x": [
+			"line": 1,
+			"x":
+			[
 			"print(f'a = {a}')",
-		]
+			"print(f'b = {b}')"
+			]
 		}
 	])
 	def add(a, b):
 		return a + b
 
-	add(1,2)
+	print(add(1,2))
+
+def test_info_inject_2():
+	@InfoInjector.inject_debug_info([
+		{
+			"line": 1,
+			"x":
+			[
+			"print(f'n = {n}')",
+			]
+		},
+		{
+			"line": 2,
+			"x":
+			[
+			"\tprint(f'n <= 1 = {n <= 1}')",
+			]
+		},
+		{
+			"line": 4,
+			"x":
+			[
+			"\tprint(f'fib(n-2) = {fib(n-2)}')",
+			]
+		}
+	])
+	def fib(n):
+		if n <= 1:
+			return n
+		else:
+			return fib(n-1) + fib(n-2)
+	
+	fib(5)
 
 #RUN_TEST(test_handshake)
 #RUN_TEST(test_send_recv)
-RUN_TEST(test_info_inject)
+RUN_TEST(test_info_inject_1)
 
