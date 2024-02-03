@@ -68,22 +68,28 @@ class _InfoInjector:
 		"""
 		def wrapper_one(original_func):
 			def wrapper_two(*args, **kwargs):
+				
+				code = self._get_generated_func(original_func, instructions)
 
-				generated_func = self._get_generated_func(original_func, instructions)
+				# TODO: MAJOR THING TO DO...
+				# TODO: THE EVAL/EXEC IN THE SANITIZING FUNCTION IS NOT WORKING FOR SOME REASON.
+				# For some edge cases, we must sanitize the generated function.
+				# For example, if, in the instructions, we call the original function...
+				# This will throw an error, because the original function doesn't exist in this context.
+				complete = False
+				while not complete:
+					code, complete = self._sanitize_generated_func(code, original_func)
 
-				# TODO: DEBUG
-				lines = generated_func.split("\n")
-				for li in range(len(lines)):
-					lines[li] = lines[li][1:]
-				generated_func = "\n".join(lines)
-				print(generated_func)
-				# TODO: END DEBUG
+				# NOTE: FOR DEBUGGING PURPOSES...
+				print(code)
 
-				exec(generated_func)
+				# The below loads the generated function into the global scope.
+				# We force it to save the function as a global variable.
+				exec(code, globals(), globals())
 
-				# The below piece of black magic actually allows returning any kind of value from the 
-				#   generated function.
-				exec(f"__ret__ = __{original_func.__name__}__(*args, **kwargs)")
+				# The below runs the generated function and saves the return value.
+				exec(f"__ret__ = __{original_func.__name__}__(*args, **kwargs)", globals(), locals())
+
 				return locals()["__ret__"]
 
 			return wrapper_two
@@ -95,6 +101,61 @@ class _InfoInjector:
 	###########
 	# HELPERS #
 	###########
+
+
+
+	def _sanitize_generated_func(self, generated_func, original_func) -> "tuple[str,bool]":
+		try:
+
+			completely_sanitized = True
+
+			# Pass 1: if the original function is called, replace it with the modified function name.
+			compiled = re.compile(rf"\b{original_func.__name__}\b\s*\(")
+			line_of_original_func_call = None
+			lines = generated_func.split("\n")
+			for i, line in enumerate(lines):
+				if compiled.search(line):
+					completely_sanitized = False
+					lines[i] = compiled.sub(f"__{original_func.__name__}__(", line)
+					line_of_original_func_call = i
+					break
+			# We must wrap this in an exec statement.
+			prefix_i = None
+			for i, c in enumerate(lines[line_of_original_func_call]):
+				if c not in [" ", "\t"]:
+					prefix_i = i
+					break
+			assert prefix_i is not None
+			new = ""
+			new += lines[line_of_original_func_call][:prefix_i] 
+			new += f"exec('{lines[line_of_original_func_call][prefix_i:]}', globals(), locals())"
+			lines[line_of_original_func_call] = new
+			# Then we run into even more problems, because if inside the exec statement is more "'" characters,
+			#   it will break.
+			# So we must escape all "'" characters.
+			line = lines[line_of_original_func_call][prefix_i+6:-23]
+			j = 0
+			for i, char in enumerate(line):
+				if char == "'":
+					new = ""
+					new += line[:i+j]
+					new += "\\"
+					new += line[i+j:]
+					line = new
+					j += 1
+			new = ""
+			new += lines[line_of_original_func_call][:prefix_i+6]
+			new += line
+			new += lines[line_of_original_func_call][-23:]
+			lines[line_of_original_func_call] = new
+
+			return "\n".join(lines), completely_sanitized
+		
+		except Exception as e:
+			print(e)
+			return generated_func, True
+		# End of `def _sanitize_generated_func(self, generated_func, original_func) -> "str":`
+	
 
 
 	def _get_generated_func(self, original_func, instructions) -> "str":
@@ -114,39 +175,36 @@ class _InfoInjector:
 				break
 		assert min_indentation_level is not None
 
-		# Step 4: find the indentation type...Q
+		# Step 4: find the indentation type...
 		# TODO: TEST THIS WITH DIFFERENT INDENTATIONS...
 		# I use tabs, idk if it works with spaces...
-		indentation_type = None
-		for li in range(len(lines)):
-			for j, c in enumerate(lines[li]):
-				if c == " ":
-					indentation_type = " "
-					break
-				elif c == "\t":
-					indentation_type = "\t"
-					break
-		assert indentation_type is not None
-
+		indentation_type = self._get_indentation_type(lines)
+		
+		# If we have multiple instructions, we need to add some value j to the line number.
+		# This is because we are adding lines to the source code, and the line numbers will change.
+		j = 0
 		for instruction in instructions:
 			if not self._is_valid_instruction(instruction):
 				raise Exception("Invalid instruction")
 			line, x = instruction["line"], instruction["x"]
-			x_is_list = isinstance(x, list)
+			line += j
 			prefix = indentation_type*(min_indentation_level+1)
-			if x_is_list:
-				x = f"\n{prefix}".join(x)
-				x = f"{prefix}{x}"
 			# Step 5: inject the code...
-			lines.insert(line, x)
+			if isinstance(x, list):
+				for l in x:
+					lines.insert(line, f"{prefix}{l}")
+					j += 1
+			else:
+				lines.insert(line, f"{prefix}{x}")
+				j += 1
 
 		# Step 6: rename the function...
+		self._rename_function(lines, original_func_name)
+
+		# The code may come back with some lines having an extra indentation.
+		# Lets remove the indentation from the start of each line.
 		for li in range(len(lines)):
-			for j, c in enumerate(lines[li]):
-				if self._find_if_str_ahead(lines[li], j, f"def {original_func_name}"):
-					new_line = lines[li][:j]
-					new_line += f"def __{original_func_name}__" + lines[li][j+len(f"def {original_func_name}"):]
-					lines[li] = new_line
+			lines[li] = lines[li][min_indentation_level:]
 
 		return "\n".join(lines)
 
@@ -188,6 +246,40 @@ class _InfoInjector:
 		return "\n".join(lines)
 
 		# End of `def _remove_decorator_call(self, source, original_func_name):`
+
+
+
+	def _get_indentation_type(self, lines) -> "str":
+		indentation_type = None
+
+		for li in range(len(lines)):
+			for j, c in enumerate(lines[li]):
+				if c == " ":
+					indentation_type = " "
+					break
+				elif c == "\t":
+					indentation_type = "\t"
+					break
+
+		assert indentation_type is not None
+
+		return indentation_type
+	
+		# End of `def _get_indentation_type(self, lines):`
+
+
+
+	def _rename_function(self, lines, original_func_name):
+		for li in range(len(lines)):
+			for j, c in enumerate(lines[li]):
+				if self._find_if_str_ahead(lines[li], j, f"def {original_func_name}"):
+
+					new_line = lines[li][:j]
+					new_line += f"def __{original_func_name}__" + lines[li][j+len(f"def {original_func_name}"):]
+					lines[li] = new_line
+
+		# End of `def _rename_function(self, lines, original_func_name):`
+
 
 
 

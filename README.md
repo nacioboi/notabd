@@ -8,6 +8,8 @@ As of Friday, 2nd of Feb 2024, inside this file, I am trying to get the `infoinj
 
 Once we have the `infoinject` working, we can use it for extensive debugging information which will come in handy since we do actually want the code to be somewhat reliable.
 
+As of Saturday, 3rd of Feb 2024, I am working on the `./src/ptysocket/__init__.py` file.
+
 ## An idea for the logo
 
 The `bd` kindof already looks like an owl. I think we could make it look more like an owl by adding some eyes and a beak.

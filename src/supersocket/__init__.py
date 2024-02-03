@@ -5,7 +5,7 @@ import time, datetime
 from typing import Any
 
 from outvar import OutputVar
-from infoinject import infoinject
+from infoinject import InfoInjector
 
 
 
@@ -189,7 +189,7 @@ class ANetworkManipulator:
 		msg += end
 		print(msg, end="")
 
-	@infoinject.inject_debug_info([
+	@InfoInjector.inject_debug_info([
 		{
 		"line": 1, "prefix": "\t",
 		"x": "print(f\"`ANetworkManipulator.specify_socket_args` called with args={args} and kwargs={kwargs}.\")",
@@ -448,10 +448,27 @@ class Server (ANetworkManipulator):
 		self._handle_post_handshake()
 		if self.DEBUGGING: self.log(f"`Server.begin` done.")
 
-	def wait_for_connection(self) -> None:
+	def wait_for_connection(self) -> "ClientRepresentative":
 		if self.DEBUGGING: self.log(f"`Server.wait_for_connection` called.")
 
 		while not self._is_connected:
 			time.sleep(0.01)
 
 		if self.DEBUGGING: self.log(f"`Server.wait_for_connection` done.")
+		
+		return ClientRepresentative(
+			self._sock,
+			self._bindable_address, self._bindable_port,
+			self._encoding, self._buffer_size, self._suffix, self._split_char	
+		)
+
+
+
+
+class ClientRepresentative(Client):
+	def __init__(self, sock:"socket.socket",
+			bindable_address:"str", bindable_port:"int",
+			encoding: "str"="utf-8", buffer_size:"int"=512, suffix: "str|None"=None, split_char:"str|None"=None
+	) -> None:
+		super().__init__(bindable_address, bindable_port, encoding, buffer_size, suffix, split_char)
+		self._sock = sock
