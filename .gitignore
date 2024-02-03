@@ -2,4 +2,5 @@
 /.env
 /compilation_result.json
 /venv
-/.vscode
+/.vscode/*
+/.DS_Store
