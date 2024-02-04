@@ -6,3 +6,6 @@
 /.DS_Store
 /**/.DS_Store
 /log
+/src/examples/**/supersocket
+/src/examples/**/infoinject
+/src/examples/**/outvar
