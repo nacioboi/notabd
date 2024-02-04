@@ -58,11 +58,9 @@ TODO: after all this bs, rewrite the entire thing in rust and make a python wrap
 
 
 
-
 def STOP_SOCK(s:socket.socket, out_done:"OutputVar[bool]"):
 	s.close()
 	out_done.set(True)
-
 
 
 
@@ -214,7 +212,7 @@ class ANetworkManipulator:
 		if self.DEBUGGING: self.log(f"`ANetworkManipulator.end` done.")
 		return proc
 
-	def recv(self, out_packet:OutputVar[Packet]) -> None:
+	def recv_from(self, out_packet:OutputVar[Packet]) -> None:
 		if self.DEBUGGING: self.log(f"`ANetworkManipulator.recv` called with out_packet={out_packet}.")
 		if type(out_packet) is not OutputVar:
 			raise TypeError(f"Expected type `OutputVar`, got type `{type(out_packet)}`")
@@ -236,7 +234,7 @@ class ANetworkManipulator:
 		if self.DEBUGGING: self.log(f"`ANetworkManipulator.recv` done.")
 		return out_packet.set(self._recv_callback(pkt))
 
-	def send(self, packet:Packet) -> None:
+	def send_to(self, packet:Packet) -> None:
 		if self.DEBUGGING: self.log(f"`ANetworkManipulator.send` called with packet={packet}.")
 		if type(packet) is not Packet:
 			raise TypeError(f"Expected type `Packet`, got type `{type(packet)}`")
@@ -244,10 +242,6 @@ class ANetworkManipulator:
 		p = self._send_callback(packet)
 		self._send(p)
 		if self.DEBUGGING: self.log(f"`ANetworkManipulator.send` done.")
-
-
-
-
 
 
 
@@ -351,15 +345,16 @@ class Client (ANetworkManipulator):
 		self._handle_post_handshake()
 		if self.DEBUGGING: self.log(f"`Client.begin` done.")
 
-	def wait_for_connection(self) -> None:
+	def wait_for_connection(self) -> "ServerRepresentative":
 		if self.DEBUGGING: self.log(f"`Client.wait_for_connection` called.")
 		while not self._is_connected:
 			time.sleep(0.01)
 		if self.DEBUGGING: self.log(f"`Client.wait_for_connection` done.")
-
-
-
-
+		return ServerRepresentative(
+			self._sock,
+			self._bindable_address, self._bindable_port,
+			self._encoding, self._buffer_size, self._suffix, self._split_char
+		)
 
 
 
@@ -461,14 +456,39 @@ class Server (ANetworkManipulator):
 			self._bindable_address, self._bindable_port,
 			self._encoding, self._buffer_size, self._suffix, self._split_char	
 		)
+	
+	def send_to(self, packet:Packet) -> None:
+		error_msg = ""
+		error_msg += "The `Server` class does not support the `send` method. "
+		error_msg += "Please instead use the client representative returned by the `wait_for_connection` method "
+		error_msg += "to send packets to the client."
+		raise Exception(error_msg)
 
 
 
+class ClientRepresentative(ANetworkManipulator):
 
-class ClientRepresentative(Client):
+
+
 	def __init__(self, sock:"socket.socket",
 			bindable_address:"str", bindable_port:"int",
 			encoding: "str"="utf-8", buffer_size:"int"=512, suffix: "str|None"=None, split_char:"str|None"=None
 	) -> None:
+
 		super().__init__(bindable_address, bindable_port, encoding, buffer_size, suffix, split_char)
+		self._sock = sock
+
+
+
+class ServerRepresentative(ANetworkManipulator):
+
+
+
+	def __init__(self, sock:"socket.socket",
+			bindable_address:"str", bindable_port:"int",
+			encoding: "str"="utf-8", buffer_size:"int"=512, suffix: "str|None"=None, split_char:"str|None"=None
+	) -> None:
+		
+		super().__init__(bindable_address, bindable_port, encoding, buffer_size, suffix, split_char)
+		self._backlog = None
 		self._sock = sock

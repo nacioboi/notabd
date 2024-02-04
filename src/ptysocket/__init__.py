@@ -17,6 +17,9 @@ import os
 
 
 
+# NOTE: FOR DEBUGGING
+import datetime
+SCRIPT_STARTED_TIME = datetime.datetime.now().strftime("%d-%m-%Y_%H.%M.%S")
 
 
 
@@ -233,12 +236,26 @@ class PtySocketClient:
 
 
 	def _receive_output_loop(self) -> None:
+		global OLD_PRINT
 		while self.is_running:
+			self._client.DEBUGGING = True
+			def new_print(*args, **kwargs):
+				with open(f"log/{SCRIPT_STARTED_TIME}.log", "a") as f:
+					f.write(f"[[[ {args} ]]]\n")
+			print = new_print
 			try:
 
 				# Assuming self.client.recv() is blocking and waits for data to arrive
+				# NOTE: FOR DEBUGGING
+				with open(f"log/{SCRIPT_STARTED_TIME}.log", "a") as f:
+					f.write(f"[[[ waiting for data ]]]\n")
+				# TODO: VERY IMPORTANT, FOUND ERROR HERE.
+				# NOTE: the cause of the "too many values to unpack (expected 2)" error is the fault of
+				# 	  the supersocket module.
 				pkt = OutputVar[Packet](Packet.Empty())
 				self._client.recv(pkt)  # Adjust based on your Client class implementation
+				with open(f"log/{SCRIPT_STARTED_TIME}.log", "a") as f:
+					f.write(f"[[[ received data - msg,hdr:({pkt().msg}),({pkt().header}) ]]]\n")
 				if self.on_receive_callback:
 					self.on_receive_callback(pkt())
 
