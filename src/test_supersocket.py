@@ -1,11 +1,16 @@
-from supersocket import Packet, Client, Server, PacketHeader, OutputVar
+from supersocket import Packet, Client, Server, ClientRepresentative, ServerRepresentative, PacketHeader, OutputVar
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 import datetime
-
 import warnings
+import json
 
-# Suppress specific warnings in a specific test or setup/teardown method
+
+
+
+
+
+
 warnings.filterwarnings(action="ignore", category=ResourceWarning)
 
 OLD_PRINT = print
@@ -15,122 +20,63 @@ def print(*args, **kwargs):
 	time = datetime.datetime.now().strftime("[[ %d/%m/%Y %H:%M:%S ]]")
 	OLD_PRINT(f"\n{time} ::: {msg}")
 
-class TestSupersocket(unittest.TestCase):
 
-	def test_handshake_on_server(self):
-		print("`test_handshake_on_server` ::: Creating server...")
-		server = Server("127.0.0.1", 8000)
-		print("`test_handshake_on_server` ::: Patching `_handle_handshake` & `_handle_post_handshake`...")
-		server._handle_handshake = MagicMock(name="_handle_handshake")
-		server._handle_post_handshake = MagicMock(name="_handle_post_handshake")
-		print("`test_handshake_on_server` ::: Starting server...")
-		server.begin()
-		print("`test_handshake_on_server` ::: Asserting `_handle_handshake` was called...")
-		server._handle_handshake.assert_called_once()
-		print("`test_handshake_on_server` ::: Asserting `_handle_post_handshake` was called...")
-		server._handle_post_handshake.assert_called_once()
-		print("`test_handshake_on_server` ::: Done.")
 
-	def test_handshake_on_client(self):
-		print("`test_handshake_on_client` ::: Creating client...")
-		client = Client("127.0.0.1", 8000)
-		print("`test_handshake_on_client` ::: Patching `_handle_handshake` & `_handle_post_handshake`...")
-		client._handle_handshake = MagicMock(name="_handle_handshake")
-		client._handle_post_handshake = MagicMock(name="_handle_post_handshake")
-		print("`test_handshake_on_client` ::: Starting client...")
-		client.begin()
-		print("`test_handshake_on_client` ::: Asserting `_handle_handshake` was called...")
-		client._handle_handshake.assert_called_once()
-		print("`test_handshake_on_client` ::: Asserting `_handle_post_handshake` was called...")
-		client._handle_post_handshake.assert_called_once()
-		print("`test_handshake_on_client` ::: Done.")
 
-	def test_recv_on_server(self):
-		print("`test_send_recv_on_server` ::: Using a patch for `socket.socket`...")
-		with patch("supersocket.socket.socket") as mock_socket:
-			print("`test_send_recv_on_server` ::: Creating test message...")
-			mock_socket_instance = mock_socket.return_value
-			mock_socket_instance.recv.return_value = "test message".encode()
-			mock_socket_instance.close = MagicMock(name="close")
-			mock_socket_instance.close.assert_called_once()
-			print("`test_send_recv_on_server` ::: Creating server...")	
-			server = Server("127.0.0.1", 8000)
-			server._sock = mock_socket_instance
-			print("`test_send_recv_on_server` ::: Creating `OutputVar[Packet]`...")
-			out_packet = OutputVar[Packet](Packet.Empty())
-			print("`test_send_recv_on_server` ::: Simulating a test receiving...")
-			server.recv(out_packet)
-			print("`test_send_recv_on_server` ::: Asserting packet message...")
-			self.assertEqual(out_packet().msg, "test message")
-			print("`test_send_recv_on_server` ::: Asserting packet header...")
-			self.assertEqual(out_packet().header, PacketHeader.Empty())
-			print("`test_send_recv_on_server` ::: Done.")
 
-	def test_recv_on_client(self):
-		print("`test_send_recv_on_client` ::: Using a patch for `socket.socket`...")
-		with patch("supersocket.socket.socket") as mock_socket:
-			print("`test_send_recv_on_client` ::: Creating test message...")
-			mock_socket_instance = mock_socket.return_value
-			mock_socket_instance.recv.return_value = "test message".encode()
-			mock_socket_instance.close = MagicMock(name="close")
-			mock_socket_instance.close.assert_called_once()
-			print("`test_send_recv_on_client` ::: Creating client...")
-			client = Client("127.0.0.1", 8000)
-			client._sock = mock_socket_instance
-			print("`test_send_recv_on_client` ::: Creating `OutputVar[Packet]`...")
-			out_packet = OutputVar[Packet](Packet.Empty())
-			print("`test_send_recv_on_client` ::: Simulating a test receiving...")
-			client.recv(out_packet)
-			print("`test_send_recv_on_client` ::: Asserting packet message...")
-			self.assertEqual(out_packet().msg, "test message")
-			print("`test_send_recv_on_client` ::: Asserting packet header...")
-			self.assertEqual(out_packet().header, PacketHeader.Empty())
-			print("`test_send_recv_on_client` ::: Done.")
 
-	def generate_1_kilobyte_message(self):
-		return "a" * 1024
 
-	def test_recv_more_than_buffer_size_on_server(self):
-		print("`test_send_recv_more_than_buffer_size_on_server` ::: Using a patch for `socket.socket`...")
-		with patch("supersocket.socket.socket") as mock_socket:
-			print("`test_send_recv_more_than_buffer_size_on_server` ::: Creating test message...")
-			mock_socket_instance = mock_socket.return_value
-			mock_socket_instance.recv.return_value = self.generate_1_kilobyte_message().encode()
-			mock_socket_instance.close = MagicMock(name="close")
-			mock_socket_instance.close.assert_called_once()
-			print("`test_send_recv_more_than_buffer_size_on_server` ::: Creating server...")
-			server = Server("127.0.0.1", 8000)
-			server._sock = mock_socket_instance
-			print("`test_send_recv_more_than_buffer_size_on_server` ::: Creating `OutputVar[Packet]`...")
-			out_packet = OutputVar[Packet](Packet.Empty())
-			print("`test_send_recv_more_than_buffer_size_on_server` ::: Simulating a test receiving...")
-			server.recv(out_packet)
-			print("`test_send_recv_more_than_buffer_size_on_server` ::: Asserting packet message...")
-			self.assertEqual(out_packet().msg, self.generate_1_kilobyte_message())
-			print("`test_send_recv_more_than_buffer_size_on_server` ::: Asserting packet header...")
-			self.assertEqual(out_packet().header, PacketHeader.Empty())
-			print("`test_send_recv_more_than_buffer_size_on_server` ::: Done.")
+class Test_supersocket_ANetworkManipulator(unittest.TestCase):
 
-	def test_recv_more_than_buffer_size_on_client(self):
-		print("`test_send_recv_more_than_buffer_size_on_client` ::: Using a patch for `socket.socket`...")
-		with patch("supersocket.socket.socket") as mock_socket:
-			print("`test_send_recv_more_than_buffer_size_on_client` ::: Creating test message...")
-			mock_socket_instance = mock_socket.return_value
-			mock_socket_instance.recv.return_value = self.generate_1_kilobyte_message().encode()
-			mock_socket_instance.close = MagicMock(name="close")
-			mock_socket_instance.close.assert_called_once()
-			print("`test_send_recv_more_than_buffer_size_on_client` ::: Creating client...")
-			client = Client("127.0.0.1", 8000)
-			client._sock = mock_socket_instance
-			print("`test_send_recv_more_than_buffer_size_on_client` ::: Creating `OutputVar[Packet]`...")
-			out_packet = OutputVar[Packet](Packet.Empty())
-			print("`test_send_recv_more_than_buffer_size_on_client` ::: Simulating a test receiving...")
-			client.recv(out_packet)
-			print("`test_send_recv_more_than_buffer_size_on_client` ::: Asserting packet message...")
-			self.assertEqual(out_packet().msg, self.generate_1_kilobyte_message())
-			print("`test_send_recv_more_than_buffer_size_on_client` ::: Asserting packet header...")
-			self.assertEqual(out_packet().header, PacketHeader.Empty())
-			print("`test_send_recv_more_than_buffer_size_on_client` ::: Done.")
+
+
+	@patch("supersocket.socket.socket")
+	def test_direct_recv_from_using_client(self, mock_socket_class):
+		mock_socket = MagicMock()
+		mock_socket_class.return_value = mock_socket
+
+		client = Client("127.0.0.1", 12345, buffer_size=8)
+
+		# Mocking the handshake methods to not actually perform any network operations.
+		client._handle_handshake = MagicMock()
+		client._handle_post_handshake = MagicMock()
+		
+		# Since we're testing `direct_recv_from`, no need to mock `client.begin` or invoke it.
+		# Prepare the mocked `_recv` method to simulate receiving message parts.
+		parts = [
+			f"{{\"a\":\"b\"}}{client._split_char}",
+			"Hello     ",
+			"     World",
+			f"     !!!!{client._suffix}"
+		]
+		for part in parts:
+			assert len(part) == 10
+		client._recv = MagicMock(side_effect=parts)  # Directly mock `_recv` on the instance
+
+		# Invoke `direct_recv_from` to test its behavior.
+		packet = client.direct_recv_from()
+
+		# Verify `_recv` was called the correct number of times.
+		self.assertEqual(client._recv.call_count, len(parts))
+
+		# Construct the expected message by joining the parts and removing sum stuff.
+		expected_message = "".join(parts)
+		expected_message = expected_message[expected_message.find(client._split_char)+1:]
+		expected_message = expected_message[:expected_message.find(client._suffix)]
+
+		# Construct the expected header.
+		expected_header = json.loads(PacketHeader(a="b")())
+
+		# Assert that the packet contains the expected message.
+		self.assertEqual(packet.msg, expected_message)
+		self.assertEqual(packet.header, expected_header)
+
+		# Assert that the packet's splitter are as expected.
+		self.assertEqual(packet._splitter, client._split_char)
+
+		# End of `test_direct_recv_from`
+
+
 
 
 

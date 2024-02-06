@@ -219,20 +219,46 @@ class ANetworkManipulator:
 		if type(out_packet()) is not Packet:
 			raise TypeError(f"Expected type `Packet`, got type `{type(out_packet())}`")
 
+		pkt = self.direct_recv_from()
+		out_packet.set(pkt)
+
+		if self.DEBUGGING: self.log(f"`ANetworkManipulator.recv` done.")
+		
+	def direct_recv_from(self) -> Packet:
+		if self.DEBUGGING: self.log(f"`ANetworkManipulator.directly_recv_from` called.")
+
+		"""
+		For testing purposes, we need to know the side effects and parameters of the function.
+
+		side effects:
+		- calls `self._recv`
+		- calls `Packet.__init__`
+		- calls `PacketHeader.__init__`
+
+		parameters:
+		- suffix
+		- split_char
+		"""
+
 		msgs = [self._recv()]
 		while not msgs[len(msgs)-1].endswith(self._suffix):
 			msgs.append(self._recv())
-		msg = ""
-		for m in msgs:
-			msg += m
+		msg = "".join(msgs)
+	
 		if self.DEBUGGING: self.log(f"MSG: \t [{repr(msg)}]")
 		header, msg = msg.split(self._split_char)
+
+		# TODO: make custom repr function, if we don't, the header will use single quotes instead of double.
+		# This causes the PacketHeader serialization to fail.
 		if repr(header) == "{}":
 			pkt = Packet(msg.strip(self._suffix), header=PacketHeader(), splitter=self._split_char)
 		else:
 			pkt = Packet(msg.strip(self._suffix), header=PacketHeader(__from_string=header), splitter=self._split_char)
+
+		self._recv_callback(pkt)
+
 		if self.DEBUGGING: self.log(f"`ANetworkManipulator.recv` done.")
-		return out_packet.set(self._recv_callback(pkt))
+		return pkt
 
 	def send_to(self, packet:Packet) -> None:
 		if self.DEBUGGING: self.log(f"`ANetworkManipulator.send` called with packet={packet}.")
@@ -446,6 +472,7 @@ class Server (ANetworkManipulator):
 	def wait_for_connection(self) -> "ClientRepresentative":
 		if self.DEBUGGING: self.log(f"`Server.wait_for_connection` called.")
 
+		# WTF? why did i put this here?
 		while not self._is_connected:
 			time.sleep(0.01)
 
