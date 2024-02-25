@@ -3,7 +3,7 @@ ptysocket is a library that provides a simple way to control a terminal from mac
 on machine b.
 """
 
-from supersocket import Packet, Client, Server, OutputVar
+from supersocket import Packet, Client, Server, ClientRepresentative, ServerRepresentative, OutputVar
 from outvar import OutputVar
 
 from typing import Callable
@@ -21,7 +21,7 @@ import os
 import datetime
 SCRIPT_STARTED_TIME = datetime.datetime.now().strftime("%d-%m-%Y_%H.%M.%S")
 
-
+OLD_PRINT = print
 
 class PtySocketServer:
 
@@ -74,7 +74,7 @@ class PtySocketServer:
 		self._setup_pty()
 
 		self._server.begin()
-		client:"Client" = self._server.wait_for_connection()
+		client:"ClientRepresentative" = self._server.wait_for_connection()
 
 		self.read_thread = threading.Thread(target=self._read_from_pty_and_send, args=(client,), daemon=True)
 		self.write_thread = threading.Thread(target=self._receive_and_write_to_pty, args=(client,), daemon=True)
@@ -100,7 +100,7 @@ class PtySocketServer:
 			if self._pty_master in r:
 				output = os.read(self._pty_master, 1024)
 				pkt = Packet(output.decode())
-				client.send(pkt)
+				client.send_to(pkt)
 
 		print("Exiting _read_from_pty_and_send")
 
@@ -109,7 +109,7 @@ class PtySocketServer:
 		assert self._pty_master is not None
 		while self.is_running:
 			pkt = OutputVar[Packet](Packet.Empty())
-			client.recv(pkt)
+			client.recv_from(pkt)
 			data = pkt().msg
 			if data:
 				os.write(self._pty_master, data.encode())
@@ -215,7 +215,7 @@ class PtySocketClient:
 	def send_command(self, command: str) -> None:
 
 		packet = Packet(command)
-		self._client.send(packet)
+		self._client.send_to(packet)
 
 		# End of `send_command`
 
@@ -238,7 +238,6 @@ class PtySocketClient:
 	def _receive_output_loop(self) -> None:
 		global OLD_PRINT
 		while self.is_running:
-			self._client.DEBUGGING = True
 			def new_print(*args, **kwargs):
 				with open(f"log/{SCRIPT_STARTED_TIME}.log", "a") as f:
 					f.write(f"[[[ {args} ]]]\n")
@@ -253,7 +252,7 @@ class PtySocketClient:
 				# NOTE: the cause of the "too many values to unpack (expected 2)" error is the fault of
 				# 	  the supersocket module.
 				pkt = OutputVar[Packet](Packet.Empty())
-				self._client.recv(pkt)  # Adjust based on your Client class implementation
+				self._client.recv_from(pkt)  # Adjust based on your Client class implementation
 				with open(f"log/{SCRIPT_STARTED_TIME}.log", "a") as f:
 					f.write(f"[[[ received data - msg,hdr:({pkt().msg}),({pkt().header}) ]]]\n")
 				if self.on_receive_callback:
@@ -265,4 +264,7 @@ class PtySocketClient:
 				if self.on_disconnect_callback:
 					self.on_disconnect_callback(e)
 				break  # Exit the loop if an error occurs
+
+			finally:
+				print = OLD_PRINT
 		# End of `_receive_output`

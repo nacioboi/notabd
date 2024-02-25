@@ -32,10 +32,11 @@ class Test_supersocket_ANetworkManipulator(unittest.TestCase):
 
 	@patch("supersocket.socket.socket")
 	def test_direct_recv_from_using_client(self, mock_socket_class):
+		# Making `supersocket.socket.socket` be a mocked object.
 		mock_socket = MagicMock()
 		mock_socket_class.return_value = mock_socket
 
-		client = Client("127.0.0.1", 12345, buffer_size=8)
+		client = Client("127.0.0.1", 12345, buffer_size=10)
 
 		# Mocking the handshake methods to not actually perform any network operations.
 		client._handle_handshake = MagicMock()
@@ -75,6 +76,69 @@ class Test_supersocket_ANetworkManipulator(unittest.TestCase):
 		self.assertEqual(packet._splitter, client._split_char)
 
 		# End of `test_direct_recv_from`
+
+
+
+	@patch("supersocket.socket.socket")
+	def test_compatible_handshake_on_server(self, mock_socket_class):
+		# Making `supersocket.socket.socket` be a mocked object.
+		mock_socket = MagicMock()
+		mock_socket.accept = MagicMock(return_value=(mock_socket, "accept"))
+		mock_socket_class.return_value = mock_socket
+
+		server = Server("127.0.0.1", 12345, buffer_size=10)
+
+		# Mocking the `socket.recv` to simulate receiving a handshake message.
+		handshake_message = ""
+		handshake_message += f"{str(server._encoding)}\u0001"
+		handshake_message += f"{str(server._buffer_size)}\u0001"
+		handshake_message += f"{str(server._suffix)}\u0001"
+		handshake_message += f"{str(server._split_char)}"
+		mock_socket.recv = MagicMock(return_value=handshake_message.encode(server._encoding))
+
+		server.begin()
+
+		# Verify that the server's handshake was handled correctly.
+		self.assertTrue(server._handshake_completed)
+		self.assertTrue(server._is_connected)
+
+		# End of `test_compatible_handshake_on_server`
+
+
+
+	@patch("supersocket.socket.socket")
+	def test_incompatible_handshake_on_server(self, mock_socket_class):
+		# Making `supersocket.socket.socket` be a mocked object.
+		mock_socket = MagicMock()
+		mock_socket_class.return_value = mock_socket
+
+		server = Server("127.0.0.1", 12345, buffer_size=10)
+
+		# Mocking the `socket.recv` to simulate receiving a handshake message.
+		handshake_message = ""
+		handshake_message += f"{str(server._encoding)}\u0001"
+		handshake_message += f"8\u0001" # incompatible buffer size
+		handshake_message += f"{str(server._suffix)}\u0001"
+		handshake_message += f"{str(server._split_char)}"
+		mock_socket.recv = MagicMock(return_value=handshake_message.encode(server._encoding))
+
+		try:
+			server.begin()
+		except:
+			pass
+
+		# Verify that the server's handshake was handled correctly.
+		try:
+			_ = server._handshake_completed
+			raise Exception("Server handshake should have failed.")
+		except AttributeError:
+			pass
+
+		self.assertFalse(server._is_connected)
+
+		# End of `test_incompatible_handshake_on_server`
+
+
 
 
 

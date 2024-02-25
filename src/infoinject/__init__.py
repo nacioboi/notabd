@@ -15,6 +15,21 @@ import inspect
 import json, os
 import re
 
+
+
+DEBUG_MODES_CONF = [
+	"Disabled",
+	"Release",
+	"Debug"
+]
+
+def REGENERATE_DEBUG_MODES():
+	msg = "class DebugMode(Enum):\n"
+	for i, mode in enumerate(DEBUG_MODES_CONF):
+		msg += f"\t{mode} = {i}\n"
+	exec(msg, globals(), locals())
+	return globals()["DebugMode"]
+
 class DebugMode(Enum):
 	Disabled = 0
 	Release = 1
@@ -23,6 +38,12 @@ class DebugMode(Enum):
 
 
 
+
+
+class DebugImplementation:
+	def __init__(self) -> None:
+		self.write_hooks = {}
+		self.read_hooks = {}
 
 
 
@@ -36,6 +57,9 @@ class _InfoInjector:
 				pass
 			return wrapper_two
 		return wrapper_one
+		# End of `def inject(self, globals, locals):`
+
+
 
 	def add_instruction(self, instruction:"dict"):
 		def wrapper_one(original_func):
@@ -43,12 +67,14 @@ class _InfoInjector:
 				pass
 			return wrapper_two
 		return wrapper_one
+		# End of `def add_instruction(self, instruction:"dict"):`
 
 
 
 	def __init__(self, debug_mode_:"DebugMode"=DebugMode.Disabled) -> None:
 
 		self.debug_mode = debug_mode_
+		self._debug_implementations = {}
 
 		# End of `def __init__(self, debug_mode_:"DebugMode"=DebugMode.Disabled) -> None:`
 	
@@ -59,6 +85,12 @@ class _InfoInjector:
 		self.debug_mode = new_debug_mode
 
 		# End of `def set_debug_mode(self, new_debug_mode:"DebugMode"):`
+
+	
+
+	def set_debug_implementation(self, debug_mode:"DebugMode", implementation:"DebugImplementation"):
+		self._debug_implementations[debug_mode] = implementation
+		# End of `def set_debug_implementation(self, debug_mode:"DebugMode", implementation:"Callable"):`
 
 
 

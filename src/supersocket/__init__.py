@@ -5,7 +5,6 @@ import time, datetime
 from typing import Any
 
 from outvar import OutputVar
-from infoinject import InfoInjector
 
 
 
@@ -162,6 +161,21 @@ class ANetworkManipulator:
 
 		self._is_connected = False
 
+		try:
+			_ = self.__DISABLE_HANDSHAKE_NONE_CHECK__
+		except AttributeError:
+			self.__DISABLE_HANDSHAKE_NONE_CHECK__ = False
+
+		if self.__DISABLE_HANDSHAKE_NONE_CHECK__:
+			return
+		
+		try:
+			_ = self._handle_handshake
+			_ = self._handle_post_handshake
+		except AttributeError:
+			self._handle_handshake = None
+			self._handle_post_handshake = None
+
 		if self._handle_handshake is None: # type:ignore
 			err_msg = ""
 			err_msg += "Any child class of `ANetworkManipulator` must implement the `_handle_handshake` "
@@ -187,12 +201,6 @@ class ANetworkManipulator:
 		msg += end
 		print(msg, end="")
 
-	@InfoInjector.inject_debug_info([
-		{
-		"line": 1, "prefix": "\t",
-		"x": "print(f\"`ANetworkManipulator.specify_socket_args` called with args={args} and kwargs={kwargs}.\")",
-		}
-	])
 	def specify_socket_args(self, *args, **kwargs) -> None:
 		if self.DEBUGGING:
 			self.log(f"`ANetworkManipulator.specify_socket_args` called with args={args} and kwargs={kwargs}.")
@@ -501,7 +509,8 @@ class ClientRepresentative(ANetworkManipulator):
 			bindable_address:"str", bindable_port:"int",
 			encoding: "str"="utf-8", buffer_size:"int"=512, suffix: "str|None"=None, split_char:"str|None"=None
 	) -> None:
-
+		
+		self.__DISABLE_HANDSHAKE_NONE_CHECK__ = True
 		super().__init__(bindable_address, bindable_port, encoding, buffer_size, suffix, split_char)
 		self._sock = sock
 
@@ -516,6 +525,7 @@ class ServerRepresentative(ANetworkManipulator):
 			encoding: "str"="utf-8", buffer_size:"int"=512, suffix: "str|None"=None, split_char:"str|None"=None
 	) -> None:
 		
+		self.__DISABLE_HANDSHAKE_NONE_CHECK__ = True
 		super().__init__(bindable_address, bindable_port, encoding, buffer_size, suffix, split_char)
 		self._backlog = None
 		self._sock = sock
