@@ -9,19 +9,6 @@ this means that the interesting parts of the code stay separate from printing an
 
 
 
-from typing import Any, Callable
-from enum import Enum
-import inspect
-import json, os
-import re
-
-class DebugMode(Enum):
-	Disabled = 0
-	Release = 1
-	Debug = 2
-
-
-
 
 
 
@@ -46,7 +33,7 @@ class _InfoInjector:
 
 
 
-	def __init__(self, debug_mode_:"DebugMode"=DebugMode.Disabled) -> None:
+	def __init__(self, debug_mode_:"_DebugMode"=DebugMode.Disabled) -> None:
 
 		self.debug_mode = debug_mode_
 
@@ -54,7 +41,7 @@ class _InfoInjector:
 	
 
 
-	def set_debug_mode(self, new_debug_mode:"DebugMode"):
+	def set_debug_mode(self, new_debug_mode:"_DebugMode"):
 
 		self.debug_mode = new_debug_mode
 
