@@ -8,8 +8,8 @@ from typing import Any, Callable
 
 
 DEBUG_MODES:"dict[str,ADebugMode]" = {}
+ACTIVE_DEBUG_MODE = None
 LOGGER_INSTANCE = None
-IO_WRAPPER_INSTANCE = None
 
 
 
@@ -22,10 +22,16 @@ IO_WRAPPER_INSTANCE = None
 
 @dataclasses.dataclass
 class ADebugMode:
-	io_based_on_context: bool
 	write_to_file: str|None
 	write_to_io: int|None
-	extends_from: str|None
+	level: int
+
+	@staticmethod
+	def Empty() -> "ADebugMode":
+		return ADebugMode(None, None, -1)
+	
+	def handle_global(self, context, global_mode, message):
+		context.handle(self.write_to_file, self.write_to_io, self.level, global_mode, message)
 
 
 

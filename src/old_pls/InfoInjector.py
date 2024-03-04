@@ -1,11 +1,8 @@
-"""
-info inject is a module allowing you to compile python source code with added debug information.
-this means that the interesting parts of the code stay separate from printing and other debug code.
-"""
+from .DebugMode import _DebugMode, DebugMode
 
-
-
-
+from typing import Callable
+import inspect
+import re
 
 
 
@@ -325,9 +322,3 @@ class _InfoInjector:
 
 		# End of `def _find_if_str_ahead(self, source, i, str):`
 
-
-
-
-
-
-InfoInjector = _InfoInjector()

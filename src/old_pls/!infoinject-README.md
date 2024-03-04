@@ -184,3 +184,44 @@ Logger.o.rendering.info("The rendering engine in this engine is pretty simple!")
 - [x] SQ5: When calling to print, is what we are doing okay? Should we do something more like this?
   - YES. i think that the other way is better. It is more condense which a lot of the time is super important.
   - It can throw off intellisense, but there is ways to hack around that, and, if we do hack it, it will be so worth it.
+
+## Now for examples
+
+Simple chat app that defines global options for debug contexts and modes.
+
+```py
+from infoinject import Logger
+from infoinject.extras import TimeFormatter, CallerFormatter
+
+# use below to separate log files based on debug mode instead of debug context.
+#Logger.set("io_based_on_mode", True)
+
+Logger.add_debug_mode("info")
+Logger.add_debug_mode("detail", extends_from="info")
+Logger.add_debug_mode("debug", extends_from="detail")
+
+Logger.add_debug_context("generic")
+Logger.add_debug_context("rendering")
+Logger.add_debug_context("physics")
+
+# The below will add the time before each log message.
+Logger.debug_contexts["generic"].add_format_layer(TimeFormatter)
+Logger.debug_contexts["rendering"].add_format_layer(TimeFormatter)
+Logger.debug_contexts["physics"].add_format_layer(TimeFormatter)
+
+# The below will add which ever function called the log message.
+Logger.debug_contexts["generic"].add_format_layer(CallerFormatter)
+Logger.debug_contexts["rendering"].add_format_layer(CallerFormatter)
+Logger.debug_contexts["physics"].add_format_layer(CallerFormatter)
+
+# The below sets the global context to generic.
+Logger.set("global_context", "generic")
+
+# Now we can use the debug contexts to log messages.
+Logger.o.info("This is using the generic context.")
+Logger.o.info("It works since we set a global context.")
+
+class renderer:
+	def __init__(self):
+		Logger.o.rendering.detail("The rendering engine in this engine is pretty simple!")
+```

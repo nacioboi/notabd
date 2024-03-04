@@ -37,9 +37,13 @@ def add(a, b):
 	}
 ], globals(), locals())
 def fib(n):
+	# print(f'n = {n}')
 	if n <= 1:
+		# print(f'n <= 1')
 		return n
 	else:
+		# if n % 2 == 0:
+		# 	print('n is even')
 		return fib(n-1) + fib(n-2)
 
 
