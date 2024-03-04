@@ -9,15 +9,11 @@ this means that the interesting parts of the code stay separate from printing an
 
 
 
-from .ColorConfiguration import ColorConfiguration
-from .DebugContext import DebugContext
-from .DebugMode import ADebugMode, DebugMode
 from .InfoInjector import _InfoInjector
-from .Logger import pls
-
-from .formatters import TimeFormatter, CallerFormatter
 
 InfoInjector = _InfoInjector()
+
+from Logger import pls
 
 
 """
