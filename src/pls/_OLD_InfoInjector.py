@@ -1,10 +1,13 @@
+from DebugMode import DebugMode
+
 from typing import Callable
 import inspect
 import re
 
 
 
-
+# NOTE: to illustrate that this is the old version of the class and we're updating to use the Logger class.
+print = None
 
 
 
@@ -25,22 +28,6 @@ class _InfoInjector:
 				pass
 			return wrapper_two
 		return wrapper_one
-
-
-
-	def __init__(self, debug_mode_:"_DebugMode"=DebugMode.Disabled) -> None:
-
-		self.debug_mode = debug_mode_
-
-		# End of `def __init__(self, debug_mode_:"DebugMode"=DebugMode.Disabled) -> None:`
-	
-
-
-	def set_debug_mode(self, new_debug_mode:"_DebugMode"):
-
-		self.debug_mode = new_debug_mode
-
-		# End of `def set_debug_mode(self, new_debug_mode:"DebugMode"):`
 
 
 

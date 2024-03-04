@@ -9,9 +9,9 @@ this means that the interesting parts of the code stay separate from printing an
 
 
 
-from .InfoInjector import _InfoInjector
+from ._OLD_InfoInjector import _InfoInjector
 
-InfoInjector = _InfoInjector()
+_OLD_InfoInjector = _InfoInjector()
 
 from Logger import pls
 

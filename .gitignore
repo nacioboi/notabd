@@ -6,7 +6,8 @@
 /.DS_Store
 /**/.DS_Store
 /log
-/src/example/**/supersocket
-/src/example/**/infoinject
-/src/example/**/outvar
-/src/example/simpl_bd_not_using_our_sht
+/example/**/supersocket
+/example/**/infoinject
+/example/**/outvar
+/example/simpl_bd_not_using_our_sht
+/example/**/pls
