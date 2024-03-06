@@ -3,7 +3,7 @@ ensure_venv() {
 	if [ ! -d "venv" ]; then
 		echo "Creating virtual environment..."
 		python3 -m venv venv
-		bash -c "source venv/bin/activate && pip install -r requirements.txt"
+		bash -c "source venv/bin/activate && pip install pyqt5"
 	else
 		echo "Virtual environment already exists."
 		echo "Would you like to reinstall? (y/N)"
