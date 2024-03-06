@@ -83,11 +83,11 @@ etc.
 
 ...
 
->- [ ] More tests - an entire testsuite for all our fancy modules.
+>- [ ] More tests - an entire test-suite for all our fancy modules.
 
 ...
 
->- [ ] We want to setup a system so that whenever we run our code, we can run all the automated testsuite at
-> once. Then, on closure of our program, it will show the results of the testsuite.
+>- [ ] We want to setup a system so that whenever we run our code, we can run all the automated test-suite at
+> once. Then, on closure of our program, it will show the results of the test-suite.
 
-We should use multiprocessing for this, so that the testsuite can run in the background.
+We should use multiprocessing for this, so that the test-suite can run in the background.

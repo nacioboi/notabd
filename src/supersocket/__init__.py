@@ -5,7 +5,6 @@ import time, datetime
 from typing import Any
 
 from outvar import OutputVar
-from infoinject import InfoInjector
 
 
 
@@ -187,12 +186,6 @@ class ANetworkManipulator:
 		msg += end
 		print(msg, end="")
 
-	@InfoInjector.inject_debug_info([
-		{
-		"line": 1, "prefix": "\t",
-		"x": "print(f\"`ANetworkManipulator.specify_socket_args` called with args={args} and kwargs={kwargs}.\")",
-		}
-	])
 	def specify_socket_args(self, *args, **kwargs) -> None:
 		if self.DEBUGGING:
 			self.log(f"`ANetworkManipulator.specify_socket_args` called with args={args} and kwargs={kwargs}.")

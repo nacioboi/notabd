@@ -1,13 +1,16 @@
+# Absolute BS...
 /**/__pycache__
-/.env
-/compilation_result.json
-/venv
-/.vscode
 /.DS_Store
 /**/.DS_Store
+
+# Secrets...
+/.vscode
+/.env
+/venv
 /log
+
+# Synchronised files...
 /example/**/supersocket
-/example/**/infoinject
+/example/**/ptysocket
 /example/**/outvar
-/example/simpl_bd_not_using_our_sht
 /example/**/pls
