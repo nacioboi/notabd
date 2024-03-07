@@ -23,12 +23,12 @@ start_rsync() {
 }
 
 # For the chat_app example.
-start_rsync ./src/supersocket ./example/chat_app/ ./example/chat_app/supersocket
-start_rsync ./src/outvar ./example/chat_app/ ./example/chat_app/outvar
-start_rsync ./src/pls ./example/chat_app/ ./example/chat_app/pls
+start_rsync ../src/supersocket ../example/chat_app/ ../example/chat_app/supersocket
+start_rsync ../src/outvar ../example/chat_app/ ../example/chat_app/outvar
+start_rsync ../src/pls ../example/chat_app/ ../example/chat_app/pls
 
 # For the injecting exmaple.
-start_rsync ./src/pls ./example/injecting/ ./example/injecting/pls
+start_rsync ../src/pls ../example/injecting/ ../example/injecting/pls
 
 # IPC for the kill script.
 for PID in "${PROC_IDS[@]}"; do

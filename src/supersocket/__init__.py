@@ -161,6 +161,23 @@ class ANetworkManipulator:
 
 		self._is_connected = False
 
+		try:
+			x = self._handle_handshake
+		except AttributeError:
+			self._handle_handshake = None
+		try:
+			x = self._handle_post_handshake
+		except AttributeError:
+			self._handle_post_handshake = None
+
+		try:
+			x = self.__IGNORE_NOT_HAVING_HANDSHAKE_METHODS__
+		except AttributeError:
+			self.__IGNORE_NOT_HAVING_HANDSHAKE_METHODS__ = False
+
+		if self.__IGNORE_NOT_HAVING_HANDSHAKE_METHODS__: # type:ignore
+			return
+
 		if self._handle_handshake is None: # type:ignore
 			err_msg = ""
 			err_msg += "Any child class of `ANetworkManipulator` must implement the `_handle_handshake` "
@@ -494,7 +511,7 @@ class ClientRepresentative(ANetworkManipulator):
 			bindable_address:"str", bindable_port:"int",
 			encoding: "str"="utf-8", buffer_size:"int"=512, suffix: "str|None"=None, split_char:"str|None"=None
 	) -> None:
-
+		self.__IGNORE_NOT_HAVING_HANDSHAKE_METHODS__ = True
 		super().__init__(bindable_address, bindable_port, encoding, buffer_size, suffix, split_char)
 		self._sock = sock
 
@@ -508,7 +525,7 @@ class ServerRepresentative(ANetworkManipulator):
 			bindable_address:"str", bindable_port:"int",
 			encoding: "str"="utf-8", buffer_size:"int"=512, suffix: "str|None"=None, split_char:"str|None"=None
 	) -> None:
-		
+		self.__IGNORE_NOT_HAVING_HANDSHAKE_METHODS__ = True
 		super().__init__(bindable_address, bindable_port, encoding, buffer_size, suffix, split_char)
 		self._backlog = None
 		self._sock = sock
