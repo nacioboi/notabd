@@ -2,8 +2,7 @@
 
 # Only run if we are in the proj_tester directory.
 [[ ! -f rsync_for_examples.sh ]] && echo "rsync_for_examples.sh: ERROR: NOT IN THE CORRECT DIR. EXITING..." && exit 1
-
-echo hi
+[[ -f _rsync_for_examples_pid.txt ]] && exit 0
 
 bash -c "cd $(pwd) && ./_rsync_for_examples.sh" &
 PID=$!

@@ -94,14 +94,10 @@ class MainWindow(QMainWindow):
 		})
 
 		# Windows commands.
+		chat_app_subroutines_dir = f"{root_of_proj_dir}\\proj_tester\\chat_app_subroutines\\windows"
 		self.add_action_step_to_button("windows", "chat_app.server.run_button",
-			f"wsl -d Arch bash -c 'set -x ; cd {wsl_path_of_cwd} && {wsl_path_of_cwd}/rsync_for_examples.sh'"
-		)
-		self.add_action_step_to_button("windows", "chat_app.server.run_button",
-			f"python3.11.exe {root_of_proj_dir}\\example\\chat_app\\server.py"
-		)
-		self.add_action_step_to_button("windows", "chat_app.server.run_button",
-			f"wsl -d Arch \"cd {wsl_path_of_cwd} && {wsl_path_of_cwd}/kill_rsync_for_examples.sh\""
+			f"{chat_app_subroutines_dir}\\launch_server.bat " +
+			f"{chat_app_subroutines_dir} {wsl_path_of_cwd} {root_of_proj_dir}"
 		)
 
 		# Unix commands.
@@ -133,14 +129,10 @@ class MainWindow(QMainWindow):
 		})
 
 		# Windows commands.
+		chat_app_subroutines_dir = f"{root_of_proj_dir}\\proj_tester\\chat_app_subroutines\\windows"
 		self.add_action_step_to_button("windows", "chat_app.client.run_button",
-			f"wsl -d Arch bash -c \"cd {wsl_path_of_cwd} && ./rsync_for_examples.sh\""
-		)
-		self.add_action_step_to_button("windows", "chat_app.client.run_button",
-			f"python3.11.exe {root_of_proj_dir}\\example\\chat_app\\client.py"
-		)
-		self.add_action_step_to_button("windows", "chat_app.client.run_button",
-			f"wsl -d Arch \"cd {wsl_path_of_cwd} && ./kill_rsync_for_examples.sh\""
+			f"{chat_app_subroutines_dir}\\launch_client.bat " +
+			f"{chat_app_subroutines_dir} {wsl_path_of_cwd} {root_of_proj_dir}"
 		)
 
 		# Unix commands.

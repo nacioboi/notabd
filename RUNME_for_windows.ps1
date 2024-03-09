@@ -3,9 +3,9 @@
 # Windows just needs for the libs to be globally installed via pip...
 $out = pip show pyqt5
 
-if ($out -eq $null) {
+if ($out -eq "") {
     pip install pyqt5
 }
 
-cd proj_tester
+Set-Location proj_tester
 python ./proj_tester.py
