@@ -17,6 +17,8 @@ elif PLATFORM == "posix":
 else:
 	raise Exception("Unknown platform: {}".format(PLATFORM))
 
+ROOT_OF_PROJ_DIR = os.path.abspath("..")
+
 
 
 
@@ -99,6 +101,10 @@ class MainWindow(QMainWindow):
 			f"{chat_app_subroutines_dir}\\launch_server.bat " +
 			f"{chat_app_subroutines_dir} {wsl_path_of_cwd} {root_of_proj_dir}"
 		)
+		self.add_action_step_to_button("windows", "chat_app.server.run_button",
+			f"wsl -d Arch bash -c \"cd {wsl_path_of_cwd} && ./kill_rsync_for_examples.sh\""
+		)
+
 
 		# Unix commands.
 		self.add_action_step_to_button("unix", "chat_app.server.run_button",
@@ -133,6 +139,9 @@ class MainWindow(QMainWindow):
 		self.add_action_step_to_button("windows", "chat_app.client.run_button",
 			f"{chat_app_subroutines_dir}\\launch_client.bat " +
 			f"{chat_app_subroutines_dir} {wsl_path_of_cwd} {root_of_proj_dir}"
+		)
+		self.add_action_step_to_button("windows", "chat_app.client.run_button",
+			f"wsl -d Arch bash -c \"cd {wsl_path_of_cwd} && ./kill_rsync_for_examples.sh\""
 		)
 
 		# Unix commands.
@@ -255,20 +264,18 @@ class MainWindow(QMainWindow):
 		elif PLATFORM == "unix":
 			print(f"Running command: `{TERM} -e \"{cmd}\"`...")
 
-		root_proj_dir = os.path.abspath("..")
-
 		if PLATFORM == "windows":
 			try:
 				os.chdir("..")
 				os.system(f"{TERM} cmd.exe /k \"{cmd}\"")
 			finally:
-				os.chdir(f"{root_proj_dir}/proj_tester")
+				os.chdir(f"{ROOT_OF_PROJ_DIR}/proj_tester")
 		elif PLATFORM == "unix":
 			try:
 				os.chdir("..")
 				os.system(f"{TERM} -e \"{cmd}\"")
 			finally:
-				os.chdir(f"{root_proj_dir}/proj_tester")
+				os.chdir(f"{ROOT_OF_PROJ_DIR}/proj_tester")
 
 
 

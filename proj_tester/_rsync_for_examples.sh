@@ -1,8 +1,5 @@
 #!/bin/bash 
 
-# Only run if we are not already running.
-[[ -f _rsync_for_examples_pid.txt ]] && exit 0
-
 PROC_IDS=()
 DIRS_TO_CLEAN=()
 

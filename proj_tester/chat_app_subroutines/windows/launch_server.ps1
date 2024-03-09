@@ -19,5 +19,3 @@ function Start-Command {
 
 Start-Command -Prog $PathOfWSL -Arguments "-d Arch bash -c 'cd $PathOfProjInWSL && ./rsync_for_examples.sh'"
 Start-Command -Prog $PathOfPython -Arguments "$PathOfProjInWindows\\example\\chat_app\\server.py"
-Start-Command -Prog $PathOfWSL -Arguments "-d Arch bash -c 'cd $PathOfProjInWSL && ./kill_rsync_for_examples.sh'"
-	
