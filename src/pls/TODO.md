@@ -4,7 +4,7 @@
 
 ### Top priority:
 
-- [ ] Fix the `InfoInjector.py` to work with the new `PLS` lib.
+- [x] Fix the `InfoInjector.py` to work with the new `PLS` lib.
 - [ ] Write a few tests in some other projects to test its usability.
 
 ### Some other shits:
