@@ -18,9 +18,12 @@ SCRIPT_STARTED_TIME = datetime.datetime.now().strftime("%d-%m-%Y_%H.%M.%S")
 SERVER = None
 CLIENT = None
 
+PORT = 3110
+
 
 
 def disable_echo():
+
 	# Get the current terminal settings
 	fd = sys.stdin.fileno()
 	old_settings = termios.tcgetattr(fd)
@@ -36,23 +39,30 @@ def disable_echo():
 	
 	return old_settings
 
+	# End of `disable_echo`.
+
 
 
 def restore_settings(old_settings):
+
     fd = sys.stdin.fileno()
     termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+    # End of `restore_settings`.
 
 
 
 def server_handle():
 
-	global SERVER
+	global SERVER, PORT
 
-	server = PtySocketServer("127.0.0.1", 3100)
+	server = PtySocketServer("127.0.0.1", PORT)
+
 
 	SERVER = server
 
 	server.begin()
+	print("ok")
 	server.wait_for_exit()
 
 	# End of `server_handle`.
@@ -60,12 +70,12 @@ def server_handle():
 
 
 def client_handle():
-	global CLIENT, SCRIPT_STARTED_TIME
+	global CLIENT, SCRIPT_STARTED_TIME, PORT
 	time.sleep(3)
 	old_settings = disable_echo()
 	try:
 		
-		client = PtySocketClient("127.0.0.1", 3100, PtySocketClientMode.API)
+		client = PtySocketClient("127.0.0.1", PORT, PtySocketClientMode.API)
 
 		CLIENT = client
 
@@ -85,6 +95,7 @@ def client_handle():
 		client.on_receive_callback = p
 
 		client.begin()
+		print("ok")
 		client.wait_for_exit()
 	
 	finally:
@@ -120,7 +131,8 @@ def on_press(key:"Key|KeyCode|None"):
 					"media_volume_up", "media_previous", "media_next",
 					"insert", "menu", "num_lock", "pause", "print_screen", "scroll_lock"
 				]:
-			raise NotImplementedError(f"Key [{key.name}] not supported yet. Please just dont press it.")
+			print(f"Key [{key.name}] not supported yet. Please just dont press it.")
+			return
 		elif key.name == "backspace":
 			char = "\b"
 		elif key.name == "delete":
@@ -170,27 +182,42 @@ def on_release(key):
 
 
 
-st = threading.Thread(target=server_handle)
-ct = threading.Thread(target=client_handle)
+def main(mode):
 
-st.start()
-ct.start()
+	t = None
+
+	if mode == "server":
+		t = threading.Thread(target=server_handle)
+	else:
+		t = threading.Thread(target=client_handle)
+
+	assert t is not None
+	t.start()
+
+	# Start listening for keypress
+	if mode == "client":
+		listener = Listener(on_press=on_press, on_release=on_release)
+		listener.start()
+
+	time.sleep(600)
+	t.join()
+	if mode == "client":
+		listener.stop()
+
+	# End of `main`.
 
 
 
-# Start listening for keypress
-listener = Listener(on_press=on_press, on_release=on_release)
-listener.start()
+if __name__ == "__main__":
+	if len(sys.argv) != 2:
+		print("Usage: python3 test_ptysocket.py <mode>")
+		print("  where <mode> is either 'server' or 'client'")
+		sys.exit(1)
 
+	mode = sys.argv[1]
 
+	if mode not in ["server", "client"]:
+		print(f"Invalid mode: {mode}")
+		sys.exit(1)
 
-def foo():
-	global CLIENT
-
-	assert CLIENT is not None
-
-
-
-
-st.join()
-ct.join()
+	main(mode)

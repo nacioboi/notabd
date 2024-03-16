@@ -15,6 +15,8 @@
 /example/**/outvar
 /example/**/pls
 
-_rsync_for_examples_pid.txt
-_rsync_for_examples_state_pids.txt
-_rsync_for_examples_state_dirs.txt
+/_rsync_for_examples_pid.txt
+/_rsync_for_examples_state_pids.txt
+/_rsync_for_examples_state_dirs.txt
+
+/log.log

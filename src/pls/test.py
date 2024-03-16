@@ -44,7 +44,7 @@ pls.add_debug_mode("error", separate=True)
 # Access the debug context by using the `Logger.debug_contexts` dictionary.
 
 pls.get_debug_context("generic").set_can_ever_write(True)
-pls.get_debug_context("generic").add_direction(IODirection(False, sys.stdout.fileno(), None))
+pls.get_debug_context("generic").add_direction(IODirection(False, None, "log.log"))
 pls.get_debug_context("rendering").set_can_ever_write(True)
 pls.get_debug_context("rendering").add_direction(IODirection(False, sys.stdout.fileno(), None))
 pls.get_debug_context("physics").set_can_ever_write(True)
@@ -72,7 +72,7 @@ pls.set_debug_mode("info")
 
 pls().info("This is using the generic context.")
 pls().info("It works since we set a global context.")
-
+pls().debug("This will not be printed if the current debug mode is info.")
 
 
 class renderer:

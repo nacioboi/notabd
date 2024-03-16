@@ -161,12 +161,28 @@ class ANetworkManipulator:
 
 		self._is_connected = False
 
-		if self._handle_handshake is None: # type:ignore
+		
+		try:
+			_ = self._handle_handshake
+		except:
+			self._handle_handshake = None
+
+		try:
+			_ = self._handle_post_handshake
+		except:
+			self._handle_post_handshake = None
+
+		try:
+			_ = self._IGNORE_
+		except:
+			self._IGNORE_ = False
+
+		if self._handle_handshake is None and self._IGNORE_ == False:  # type:ignore
 			err_msg = ""
 			err_msg += "Any child class of `ANetworkManipulator` must implement the `_handle_handshake` "
 			err_msg += "method"
 			raise Exception(err_msg)
-		if self._handle_post_handshake is None: # type:ignore
+		if self._handle_post_handshake is None and self._IGNORE_ == False: # type:ignore
 			err_msg = ""
 			err_msg += "Any child class of `ANetworkManipulator` must implement the "
 			err_msg += "`_handle_post_handshake` method"
@@ -237,9 +253,19 @@ class ANetworkManipulator:
 		while not msgs[len(msgs)-1].endswith(self._suffix):
 			msgs.append(self._recv())
 		msg = "".join(msgs)
+		header = "{}"
 	
 		if self.DEBUGGING: self.log(f"MSG: \t [{repr(msg)}]")
-		header, msg = msg.split(self._split_char)
+		splitted = msg.split(self._split_char)
+		if len(splitted) != 2:
+			# NOTE: QUICK FIX.
+			# TODO: fix this code...
+			# for now we just gunna hack to get past the too many values to unpack error.
+			msg = msg.split(self._split_char)[0]
+		elif len(splitted) == 2:
+			header, msg = splitted
+		else:
+			raise Exception(f"Expected 2 values, got {len(splitted)}")
 
 		# TODO: make custom repr function, if we don't, the header will use single quotes instead of double.
 		# This causes the PacketHeader serialization to fail.
@@ -495,6 +521,7 @@ class ClientRepresentative(ANetworkManipulator):
 			encoding: "str"="utf-8", buffer_size:"int"=512, suffix: "str|None"=None, split_char:"str|None"=None
 	) -> None:
 
+		self._IGNORE_ = True
 		super().__init__(bindable_address, bindable_port, encoding, buffer_size, suffix, split_char)
 		self._sock = sock
 
@@ -509,6 +536,7 @@ class ServerRepresentative(ANetworkManipulator):
 			encoding: "str"="utf-8", buffer_size:"int"=512, suffix: "str|None"=None, split_char:"str|None"=None
 	) -> None:
 		
+		self._IGNORE_ = True
 		super().__init__(bindable_address, bindable_port, encoding, buffer_size, suffix, split_char)
 		self._backlog = None
 		self._sock = sock

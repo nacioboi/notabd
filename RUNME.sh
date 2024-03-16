@@ -21,4 +21,4 @@ ensure_venv() {
 ensure_venv
 
 # Run the `__project_runner.py`
-bash -c "source venv/bin/activate && python __project_runner.py -platform wayland"
+bash -c "source venv/bin/activate && python __project_runner.py"
